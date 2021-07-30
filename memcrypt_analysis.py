@@ -25,17 +25,20 @@ def isIncremental(buffer):
      Keyword arguments:
      buffer -- the buffer to check for incremental values. 16-byte size buffers are passed in by default.
     """
-    hex_buffer = codecs.encode(buffer, 'hex') # Encode ASCII to hex.
-    hex_string = hex_buffer.decode('utf-8') # Transform into string literal.
+    hex_buffer = codecs.encode(buffer, 'hex')  # Encode ASCII to hex.
+    hex_buffer_string = hex_buffer.decode('utf-8')  # Transform into string literal.
 
-    int_array = []
-    list_of_indexes = list(range(0, 31, 2)) # Create list of 16 index values: 0,2,4,6....30.
+    int_list = []
+    # Create list of 16 index values: 0,2,4,6....30.
+    list_of_indexes = list(range(0, 31, 2))
 
-    for i in list_of_indexes: # Extract values as 2 character strings, covert each to integer and append to a list.
-        value = hex_string[i:i+2]
-        int_array.append(int(value, 16))
+    # Extract values as 2-character strings, covert each to an integer and append to int_list.
+    for i in list_of_indexes:
+        value = hex_buffer_string[i:i+2]
+        int_list.append(int(value, 16))
 
-    if int_array == list(range(int_array[0], int_array[0]+16, 1)): # Detect if the list of integers matches a list of incremental values where both start with the same value .
+    # Verify if the list of integers matches a list of incremental values where both start with the same value .
+    if int_list == list(range(int_list[0], int_list[0]+16, 1)):
         return True
 
     return False
@@ -56,32 +59,36 @@ def decryptFile(candidates):
      Keyword arguments:
      candidates -- The candidate keys and initialisation vectors (IVs) one wishes to test.
     """
-    permu = list(permutations(candidates, 2))  # This function may be used to generate all permutations of candidate values.
+    permu = list(permutations(candidates, 2)
+                 )  # This function may be used to generate all permutations of candidate values.
 
-
+    # Opens the encrypted file and assigns its content to a variable.
     file_in = open('data/encrypted_file', 'rb')
-    encrypted_data = file_in.read()  # Opens the encrypted file and assigns its content to a variable.
+    encrypted_data = file_in.read()
     file_in.close()
     decrypted_data = ''
 
-    for combination in permu:  # For every combination of key and iv...
+    # For every combination of key and iv...
+    for combination in permu:
         key = combination[0]
         iv = combination[1]
-        
-        cipher = AES.new(key, AES.MODE_CBC, iv)
-        decrypted_data = cipher.decrypt(encrypted_data)  # ...use the current value of key and iv to decrypt ciphered data...
 
-        # ...and verify if decrypted file has a known header. If it does...
+        # ...use the current value of key and iv to decrypt ciphered data...
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+        decrypted_data = cipher.decrypt(encrypted_data)
+
+        # ...and verify if decrypted file has a known header. 
         is_known, file_extension = isKnownHeader(decrypted_data)
 
-        if is_known:  
-          print(key, iv)  # Display correct combination of key and iv in terminal, and...
+        #  If it does,...
+        if is_known:
+            # ...display correct combination of key and iv in terminal, and...
+            print(key, iv)
 
-          output_file = open('data/decrypted_file' + file_extension, 'xb')
-          output_file.write(decrypted_data) #...save the decrypted data as a new file with correct extension.
-          output_file.close()
-
-
+            # ...save the decrypted data as a new file with correct extension.
+            output_file = open('data/decrypted_file' + file_extension, 'xb')
+            output_file.write(decrypted_data)
+            output_file.close()
 
 
 def isKnownHeader(buffer):
@@ -91,7 +98,7 @@ def isKnownHeader(buffer):
      Keyword arguments: 
      buffer -- The buffer we wish to determine if decryption was successful.
     """
-    # If a valid file header is detected function returns a boolean and a string with correct file extension. 
+    # If a valid file header is detected this function returns a boolean and a string with correct file extension.
     if JPEG_HDR in buffer[0:len(JPEG_HDR)]:
         return True, '.jpeg'
     if MS_OFFICE_HDR in buffer[0:len(MS_OFFICE_HDR)]:
@@ -127,13 +134,12 @@ def memoryAnalysis(file, offset):
 
 def main():
     # We begin by analysing the memory dump file. A list of candidate values will be returned by the function.
-    my_path = os.path.abspath(os.path.dirname(__file__))
-    path = os.path.join(my_path, "data/memory_dump.bin")
 
-    candidates = memoryAnalysis(path, 16)
+    # The orifginal line below didn't work for me, so I changed it.
     # candidates = memoryAnalysis(r"data\memory_dump.bin", 16)
+    candidates = memoryAnalysis("./data/memory_dump.bin", 16)
 
-    # We then attempt to decrypt the encypted_file by trying all possible permutation of candidate values.
+    # We then attempt to decrypt the encrypted_file by trying all possible permutation of candidate values.
     decryptFile(candidates)
 
 
