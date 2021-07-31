@@ -3,6 +3,7 @@ from itertools import permutations
 import os
 import codecs
 
+
 # Below are header values for common file types.
 JPEG_HDR = b'\xFF\xD8\xFF\xE0'
 MS_OFFICE_HDR = b'\x50\x4B\x03\x04\x14\x00\x06\x00'
@@ -25,8 +26,11 @@ def isIncremental(buffer):
      Keyword arguments:
      buffer -- the buffer to check for incremental values. 16-byte size buffers are passed in by default.
     """
-    hex_buffer = codecs.encode(buffer, 'hex')  # Encode ASCII to hex.
-    hex_buffer_string = hex_buffer.decode('utf-8')  # Transform into string literal.
+
+    # Encode ASCII to hex.
+    hex_buffer = codecs.encode(buffer, 'hex')
+    # Transform into string literal.
+    hex_buffer_string = hex_buffer.decode('utf-8')
 
     int_list = []
     # Create list of 16 index values: 0,2,4,6....30.
@@ -63,7 +67,7 @@ def decryptFile(candidates):
                  )  # This function may be used to generate all permutations of candidate values.
 
     # Opens the encrypted file and assigns its content to a variable.
-    file_in = open('data/encrypted_file', 'rb')
+    file_in = open('./data/encrypted_file', 'rb')
     encrypted_data = file_in.read()
     file_in.close()
     decrypted_data = ''
@@ -77,7 +81,7 @@ def decryptFile(candidates):
         cipher = AES.new(key, AES.MODE_CBC, iv)
         decrypted_data = cipher.decrypt(encrypted_data)
 
-        # ...and verify if decrypted file has a known header. 
+        # ...and verify if decrypted file has a known header.
         is_known, file_extension = isKnownHeader(decrypted_data)
 
         #  If it does,...
@@ -85,10 +89,11 @@ def decryptFile(candidates):
             # ...display correct combination of key and iv in terminal, and...
             print(key, iv)
 
-            # ...save the decrypted data as a new file with correct extension.
-            output_file = open('data/decrypted_file' + file_extension, 'xb')
+            # # ...save the decrypted data as a new file with correct extension. If file already exists, overwrite it.
+            output_file = open('./data/decrypted_file' + file_extension, 'wb')
             output_file.write(decrypted_data)
             output_file.close()
+            return
 
 
 def isKnownHeader(buffer):
@@ -135,7 +140,7 @@ def memoryAnalysis(file, offset):
 def main():
     # We begin by analysing the memory dump file. A list of candidate values will be returned by the function.
 
-    # The orifginal line below didn't work for me, so I changed it.
+    # The orifginal line below didn't work for me, so I modified it.
     # candidates = memoryAnalysis(r"data\memory_dump.bin", 16)
     candidates = memoryAnalysis("./data/memory_dump.bin", 16)
 
